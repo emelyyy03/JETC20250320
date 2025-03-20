@@ -4,9 +4,7 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
-
-<h4>User</h4>
+<h1>Editar datos de usuario</h1>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -24,13 +22,12 @@
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="PasswordHash" class="control-label"></label>
-                <input asp-for="PasswordHash" class="form-control" />
-                <span asp-validation-for="PasswordHash" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="Role" class="control-label"></label>
-                <input asp-for="Role" class="form-control" />
+                <select asp-for="Role" class="form-control">
+                    <option value="">SELECCIONAR</option>
+                    <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                    <option value="GERENTE">GERENTE</option>
+                </select>
                 <span asp-validation-for="Role" class="text-danger"></span>
             </div>
             <div class="form-group">

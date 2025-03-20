@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using JETC20250320.Models;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace JETC20250320.Controllers
 {
@@ -53,10 +55,11 @@ namespace JETC20250320.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserId,Username,Email,PasswordHash,Role")] User user)
+        public async Task<IActionResult> Create([Bind("UserId,Username,Email,PasswordHash,ConfirmarPassword,Role")] User user)
         {
             if (ModelState.IsValid)
             {
+                user.PasswordHash= CalcularHashMD5(user.PasswordHash);
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -85,34 +88,34 @@ namespace JETC20250320.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserId,Username,Email,PasswordHash,Role")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("UserId,Username,Email,Role")] User user)
         {
             if (id != user.UserId)
             {
                 return NotFound();
             }
-
-            if (ModelState.IsValid)
+            var usuarioUpdate = await _context.Users
+                 .FirstOrDefaultAsync(m => m.UserId == user.UserId);
+            try
             {
-                try
-                {
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!UserExists(user.UserId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                usuarioUpdate.Username = user.Username;
+                usuarioUpdate.Email = user.Email;
+                usuarioUpdate.Role = user.Role;
+                _context.Update(usuarioUpdate);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(user);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(user.UserId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    return View(user);
+                }
+            }
         }
 
         // GET: Users/Delete/5
@@ -151,6 +154,22 @@ namespace JETC20250320.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.UserId == id);
+        }
+
+        private string CalcularHashMD5(string input)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("x2")); // "x2" convierte el byte en una cadena hexadecimal de dos caracteres.
+                }
+                return sb.ToString();
+            }
         }
     }
 }
